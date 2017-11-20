@@ -81,6 +81,10 @@ void drawScene(GLint program, Matrix4f V, Matrix4f P) {
         }
         
         updateMaterialUniforms( program, batch.mat.diffuse, batch.mat.ambient, batch.mat.specular, batch.mat.shininess);
+        
+        // Texture handling:
+//        GLuint texture = glTextures[
+        
         rec.draw();
         
         i++;
@@ -141,7 +145,7 @@ void freeTextures() {
         
         glDeleteTextures(1, &glTexture);
     }
-    glTextures.clear();
+//    glTextures.clear();
 }
 
 void loadFramebuffer() {
