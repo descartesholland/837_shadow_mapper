@@ -172,7 +172,7 @@ bool objparser::loadtextures(const std::string& basepath, const std::map<std::st
         material mat = it->second;
         if (mat.diffuse_texture != "") {
             std::string jpgfile = basepath + mat.diffuse_texture;
-            //printf("Loading texture from %s\n", jpgfile.c_str());
+            printf("Loading texture from %s\n", jpgfile.c_str());
 
             rgbimage im;
             int nc;

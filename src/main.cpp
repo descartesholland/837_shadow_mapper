@@ -44,11 +44,7 @@ glfwtimer timer;
 VertexRecorder rec;
 std::map<std::string, GLuint> glTextures;
 
-
-// FUNCTION IMPLEMENTATIONS
-
 // animate light source direction
-// this one is implemented for you
 void updateLightDirection() {
     // feel free to edit this
     float elapsed_s = timer.elapsed();
@@ -83,8 +79,10 @@ void drawScene(GLint program, Matrix4f V, Matrix4f P) {
         updateMaterialUniforms( program, batch.mat.diffuse, batch.mat.ambient, batch.mat.specular, batch.mat.shininess);
         
         // Texture handling:
-//        GLuint texture = glTextures[
-        
+	cout<< "about to look up text w/ name " << batch.mat.diffuse_texture << "\n";
+        GLuint texture = glTextures[batch.mat.diffuse_texture];
+	glBindTexture(GL_TEXTURE_2D, texture);
+	
         rec.draw();
         
         i++;
@@ -115,23 +113,20 @@ void draw() {
 }
 
 void loadTextures() {
-    
     for(auto it = scene.textures.begin(); it != scene.textures.end(); ++it) {
-        
         GLuint glTexture;
-        
         std::string name = it->first;
         rgbimage& im = it->second;
         
         glGenTextures(1, &glTexture);
+
         glBindTexture(GL_TEXTURE_2D, glTexture);
-        
+
         // Allocate storage for texture; upload pixel data
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, im.data.data());
-        
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, im.w, im.h, 0, GL_RGB, GL_UNSIGNED_BYTE, im.data.data());
         // Enable BiLinear Filtering
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        
+
         // Store texture
         glTextures.insert(std::make_pair(name, glTexture));
         
