@@ -44,6 +44,10 @@ glfwtimer timer;
 VertexRecorder rec;
 std::map<std::string, GLuint> glTextures;
 
+GLuint fb; // framebuffer handle
+GLuint fb_depthtex; // framebuffer depth texture handle
+GLuint fb_colortex; // framebuffer color texture handle
+
 // animate light source direction
 void updateLightDirection() {
     // feel free to edit this
@@ -140,7 +144,44 @@ void freeTextures() {
 }
 
 void loadFramebuffer() {
+//    for(auto it = scene.textures.begin(); it != scene.textures.end(); ++it) {
+//        GLuint glTexture;
+//        std::string name = it->first;
+//        rgbimage& im = it->second;
     
+        glGenTextures(1, &fb_depthtex);
+        glGenTextures(1, &fb_colortex);
+    
+        // Handle color texture:
+        glBindTexture(GL_TEXTURE_2D, fb_colortex);
+        
+        // Allocate storage for color texture; will be filled by rendering into the texture
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 4096, 4096, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+    
+        // configure texture interpolation settings
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    
+        // Handle depth texture:
+    glBindTexture(GL_TEXTURE_2D, fb_depthtex);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 4096, 4096, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    
+    
+    // Request handle for framebuffer
+    glGenFrameBuffers(1, &fb);
+    // bind current framebuffer object
+    glBindFramebuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fb_colortex, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, fb_depthtex, 0);
+    
+    //    }
+    
+    // check configuration:
+    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if( status != GL_FRAMEBUFFER_COMPLETE) {
+        printf("Error, incomplete framebuffer\n");
+        exit(-1);
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 // Main routine.
