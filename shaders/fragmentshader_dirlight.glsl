@@ -1,8 +1,5 @@
 #version 330
 // fragment shader for phong-model lighting with a single directional light source.
-// TODO: extend this shader to
-//  - support diffuse textures
-//  - support shadow mapping
 
 in vec4 var_Color;
 in vec3 var_Normal;
@@ -44,13 +41,11 @@ vec4 blinn_phong(vec3 kd) {
                        specColor * lightDiff;
 
     // 4. Add specular and diffuse contributions
-    return  vec4(diffContrib + specContrib, alpha);
+    return vec4(diffContrib + specContrib, alpha);
 }
 
 void main () {
-	// TODO implement texture mapping here
 	// TODO implement shadow mapping here
-    //texture(diffuseTex, var_Color.xy);
-    vec3 kd = diffColor;
-    out_Color = vec4(ambientColor + blinn_phong(kd).xyz , 1) + texture(diffuseTex, var_Color.xy);
+    vec3 kd = texture(diffuseTex, var_Color.xy).xyz;
+    out_Color = vec4(ambientColor + blinn_phong(kd).xyz , 1);
 }

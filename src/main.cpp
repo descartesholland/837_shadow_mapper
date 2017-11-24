@@ -51,13 +51,13 @@ void updateLightDirection() {
     //elapsed_s = 88.88f;
     float timescale = 0.1f;
     light_dir = Vector3f(2.0f * sinf((float)elapsed_s * 1.5f * timescale),
-        5.0f, 2.0f * cosf(2 + 1.9f * (float)elapsed_s * timescale));
+                         5.0f, 2.0f * cosf(2 + 1.9f * (float)elapsed_s * timescale));
     light_dir.normalize();
 }
 
 
 void drawScene(GLint program, Matrix4f V, Matrix4f P) {
-
+    
     Matrix4f M = Matrix4f::identity();
     updateTransformUniforms( program, M, V, P);
     
@@ -66,9 +66,6 @@ void drawScene(GLint program, Matrix4f V, Matrix4f P) {
         int ii = 0;
         for (int ii = batch.start_index; ii < batch.start_index + batch.nindices; ii++) {
             int currentBatchIndex = scene.indices[ii];
-//            Vector3f position(scene.positions[currentBatchIndex]);
-//            Vector3f normal(scene.normals[currentBatchIndex]);
-//            Vector2f color = scene.texcoords[currentBatchIndex];
             rec.record(
                        scene.positions[currentBatchIndex],
                        scene.normals[currentBatchIndex],
@@ -79,18 +76,13 @@ void drawScene(GLint program, Matrix4f V, Matrix4f P) {
         updateMaterialUniforms( program, batch.mat.diffuse, batch.mat.ambient, batch.mat.specular, batch.mat.shininess);
         
         // Texture handling:
-	//cout<< "lookup " << batch.mat.diffuse_texture << "\n";
         GLuint texture = glTextures[batch.mat.diffuse_texture];
-
-	cout << "Binding texture " << texture << "\n";
-	glBindTexture(GL_TEXTURE_2D, texture);
-	
-        rec.draw();
+        glBindTexture(GL_TEXTURE_2D, texture);
         
+        rec.draw();
         i++;
+        rec.clear();
     }
-    
-    rec.clear();
 }
 
 void draw() {
@@ -99,7 +91,7 @@ void draw() {
     // - configure viewport
     // - compute camera matrices (light source as camera)
     // - call drawScene
-
+    
     // 1. LIGHT PASS
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     int winw, winh;
@@ -107,11 +99,11 @@ void draw() {
     glViewport(0, 0, winw, winh);
     glUseProgram(program_light);
     updateLightUniforms(program_light, light_dir, Vector3f(1.2f, 1.2f, 1.2f));
-
+    
     drawScene(program_light, camera.GetViewMatrix(), camera.GetPerspective());
-
+    
     // 3. DRAW DEPTH TEXTURE AS QUAD
-    // drawTexturedQuad() helper in main.h is useful here.
+    //drawTexturedQuad(); //helper in main.h is useful here.
 }
 
 void loadTextures() {
@@ -121,20 +113,20 @@ void loadTextures() {
         rgbimage& im = it->second;
         
         glGenTextures(1, &glTexture);
-
+        
         glBindTexture(GL_TEXTURE_2D, glTexture);
-	cout << "\tBound texture " << glTexture << "\n";
+        cout << "\tBound texture " << glTexture << "\n";
+
         // Allocate storage for texture; upload pixel data
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, im.w, im.h, 0, GL_RGB, GL_UNSIGNED_BYTE, im.data.data());
+
         // Enable BiLinear Filtering
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
         // Store texture
         glTextures.insert(std::make_pair(name, glTexture));
-	cout << "\tStored texture with name: "<< name << "||" << glTextures[name] <<"\n";
-        
+        cout << "\tStored texture with name: "<< name << "||" << glTextures[name] <<"\n";
     }
-    
 }
 
 void freeTextures() {
@@ -163,7 +155,7 @@ int main(int argc, char* argv[])
         basepath = argv[1];
     }
     printf("Loading scene and shaders relative to path %s\n", basepath.c_str());
-
+    
     // load scene data
     // parsing code is in objparser.cpp
     // take a look at the public interface in objparser.h
@@ -172,71 +164,71 @@ int main(int argc, char* argv[])
     }
     
     rec = VertexRecorder();
-
+    
     window = createOpenGLWindow(1024, 1024, "Assignment 5");
-
+    
     // setup the event handlers
     // key handlers are defined in main.h
     // take a look at main.h to know what's in there.
     glfwSetKeyCallback(window, keyCallback);
     glfwSetMouseButtonCallback(window, mouseCallback);
     glfwSetCursorPosCallback(window, motionCallback);
-
+    
     glClearColor(0.8f, 0.8f, 1.0f, 1);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
+    
     loadTextures();
-//    loadFramebuffer();
-
+    //    loadFramebuffer();
+    
     camera.SetDimensions(600, 600);
     camera.SetPerspective(50);
     camera.SetDistance(10);
     camera.SetCenter(Vector3f(0, 1, 0));
     camera.SetRotation(Matrix4f::rotateY(1.6f) * Matrix4f::rotateZ(0.4f));
-
+    
     // set timer for animations
     timer.set();
     while (!glfwWindowShouldClose(window)) {
         setViewportWindow(window);
-
+        
         // we reload the shader files each frame.
         // this shaders can be edited while the program is running
         // loadPrograms/freePrograms is implemented in main.h
         bool valid_shaders = loadPrograms(basepath);
         if (valid_shaders) {
-
+            
             // draw coordinate axes
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             if (gMousePressed) {
                 drawAxis();
             }
-
+            
             // update animation
             updateLightDirection();
-
+            
             // draw everything
             draw();
         }
         // make sure to release the shader programs.
         freePrograms();
-
+        
         // Make back buffer visible
         glfwSwapBuffers(window);
-
+        
         // Check if any input happened during the last frame
         glfwPollEvents();
     } // END OF MAIN LOOP
-
+    
     // All OpenGL resource that are created with
     // glGen* or glCreate* must be freed.
     // TODO: add freeXYZ() function calls here
     // freeFramebuffer();
     freeTextures();
-
+    
     glfwDestroyWindow(window);
-
-
+    
+    
     return 0;	// This line is never reached.
 }
