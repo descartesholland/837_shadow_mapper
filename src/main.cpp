@@ -79,8 +79,10 @@ void drawScene(GLint program, Matrix4f V, Matrix4f P) {
         updateMaterialUniforms( program, batch.mat.diffuse, batch.mat.ambient, batch.mat.specular, batch.mat.shininess);
         
         // Texture handling:
-	cout<< "about to look up text w/ name " << batch.mat.diffuse_texture << "\n";
+	//cout<< "lookup " << batch.mat.diffuse_texture << "\n";
         GLuint texture = glTextures[batch.mat.diffuse_texture];
+
+	cout << "Binding texture " << texture << "\n";
 	glBindTexture(GL_TEXTURE_2D, texture);
 	
         rec.draw();
@@ -121,7 +123,7 @@ void loadTextures() {
         glGenTextures(1, &glTexture);
 
         glBindTexture(GL_TEXTURE_2D, glTexture);
-
+	cout << "\tBound texture " << glTexture << "\n";
         // Allocate storage for texture; upload pixel data
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, im.w, im.h, 0, GL_RGB, GL_UNSIGNED_BYTE, im.data.data());
         // Enable BiLinear Filtering
@@ -129,8 +131,10 @@ void loadTextures() {
 
         // Store texture
         glTextures.insert(std::make_pair(name, glTexture));
+	cout << "\tStored texture with name: "<< name << "||" << glTextures[name] <<"\n";
         
     }
+    
 }
 
 void freeTextures() {
@@ -140,7 +144,7 @@ void freeTextures() {
         
         glDeleteTextures(1, &glTexture);
     }
-//    glTextures.clear();
+    glTextures.clear();
 }
 
 void loadFramebuffer() {

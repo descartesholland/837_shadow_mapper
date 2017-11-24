@@ -15,8 +15,7 @@ uniform vec3 specColor;
 uniform vec3 ambientColor;
 uniform float shininess;
 uniform float alpha;
-
-// TODO add more uniforms
+uniform sampler2D diffuseTex;
 
 uniform vec3 lightPos;
 uniform vec3 lightDiff;
@@ -45,13 +44,13 @@ vec4 blinn_phong(vec3 kd) {
                        specColor * lightDiff;
 
     // 4. Add specular and diffuse contributions
-    return  + vec4(diffContrib + specContrib, alpha);
+    return  vec4(diffContrib + specContrib, alpha);
 }
 
 void main () {
 	// TODO implement texture mapping here
 	// TODO implement shadow mapping here
-
+    //texture(diffuseTex, var_Color.xy);
     vec3 kd = diffColor;
-    out_Color = vec4(ambientColor + blinn_phong(kd).xyz, 1);
+    out_Color = vec4(ambientColor + blinn_phong(kd).xyz , 1) + texture(diffuseTex, var_Color.xy);
 }
