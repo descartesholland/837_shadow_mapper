@@ -116,7 +116,7 @@ void draw() {
     //updateLightUniforms(program_color, light_dir, Vector3f(1.2f, 1.2f, 1.2f));
     drawScene(program_color, getLightView(), getLightProjection());
 
-    //glBindFramebuffer(GL_FRAMEBUFFER, 0); // reset to default FB (0)
+        glBindFramebuffer(GL_FRAMEBUFFER, 0); // reset to default FB (0)
     
     // 3. DRAW DEPTH TEXTURE AS QUAD
         glViewport(0, 0, 256, 256); // lower left corner
@@ -178,9 +178,9 @@ void loadFramebuffer() {
   glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 4096, 4096, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   
-  
   // Request handle for framebuffer
   glGenFramebuffers(1, &fb);
+
   // bind current framebuffer object
   glBindFramebuffer(GL_FRAMEBUFFER, fb);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fb_colortex, 0);
@@ -206,15 +206,15 @@ Matrix4f getLightView() {
   //float d = 100.0f;
   Vector3f center(0,0,0);
   Vector3f up(1, 1, ( - light_dir.x() - light_dir.y()) / light_dir.z() );
-  up.normalize();
-  Vector3f eye(  light_dir * 50.0f);
-  //cout << "getLightView() ret \n";
-  //Matrix4f::lookAt(eye, center, up).print();
+  //Vector3f up(light_dir.z(), light_dir.z(), -light_dir.x() - light_dir.y());
+  //up.normalize();
+  Vector3f eye(  light_dir * 100.0f);
+
   return Matrix4f::lookAt( eye, center, up);
 }
 
 Matrix4f getLightProjection() {
-  return Matrix4f::orthographicProjection(4096, 4096, 1, 100.0f, false);
+  return Matrix4f::orthographicProjection(256, 256, 1, 200, false);
 }
 
 // Main routine.
