@@ -50,7 +50,6 @@ GLuint fb_colortex; // framebuffer color texture handle
 
 // animate light source direction
 void updateLightDirection() {
-    // feel free to edit this
     float elapsed_s = timer.elapsed();
     //elapsed_s = 88.88f;
     float timescale = 0.1f;
@@ -69,21 +68,34 @@ void drawScene(GLint program, Matrix4f V, Matrix4f P) {
     for(draw_batch batch : scene.batches) {
         int ii = 0;
         for (int ii = batch.start_index; ii < batch.start_index + batch.nindices; ii++) {
-            int currentBatchIndex = scene.indices[ii];
-            rec.record(
-                       scene.positions[currentBatchIndex],
+	  int currentBatchIndex = scene.indices[ii];
+	  rec.record(
+		     scene.positions[currentBatchIndex],
                        scene.normals[currentBatchIndex],
-                       Vector3f(scene.texcoords[currentBatchIndex][0], scene.texcoords[currentBatchIndex][1], 0));
-            
+		     Vector3f(scene.texcoords[currentBatchIndex][0], scene.texcoords[currentBatchIndex][1], 0));
+	  
         }
         
         updateMaterialUniforms( program, batch.mat.diffuse, batch.mat.ambient, batch.mat.specular, batch.mat.shininess);
         
-        // Texture handling:
+        // Diffuse Texture handling:
         GLuint texture = glTextures[batch.mat.diffuse_texture];
         glBindTexture(GL_TEXTURE_2D, texture);
         
-        rec.draw();
+	// bind the depth texture to texture1; switch back
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, fb_depthtex);
+	glActiveTexture(GL_TEXTURE0);
+	
+	// Shadow mapping:
+	int loc = glGetUniformLocation(program, "shadowTex");
+	glUniform1i(loc, 1) ; // bind sample to texture unit 
+	
+	Matrix4f vp =  getLightProjection() * getLightView();
+        int matrixloc = glGetUniformLocation(program, "light_VP");
+        glUniformMatrix4fv(matrixloc, 1, false, vp);
+
+	rec.draw();
         i++;
         rec.clear();
     }
@@ -98,16 +110,12 @@ void draw() {
     glViewport(0, 0, winw, winh);
     glUseProgram(program_light);
     updateLightUniforms(program_light, light_dir, Vector3f(1.2f, 1.2f, 1.2f));
-    
+
     drawScene(program_light, camera.GetViewMatrix(), camera.GetPerspective());
-        
-    glBindFramebuffer(GL_FRAMEBUFFER, 0); // reset to default FB (0)
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     
     // 2. DEPTH PASS
-    // - bind framebuffer
-    // - configure viewport
-    // - compute camera matrices (light source as camera)
-    // - call drawScene
     glBindFramebuffer(GL_FRAMEBUFFER, fb);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
@@ -115,12 +123,13 @@ void draw() {
 
     drawScene(program_color, getLightView(), getLightProjection());
 
-    glBindFramebuffer(GL_FRAMEBUFFER, 0); // reset to default FB (0)
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     
     // 3. DRAW DEPTH TEXTURE AS QUAD
     glViewport(0, 0, 256, 256);
-    drawTexturedQuad(fb_depthtex); //helper in main.h is useful here.
-    glBindFramebuffer(GL_FRAMEBUFFER, 0); // reset to default FB (0)
+    drawTexturedQuad(fb_depthtex);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
     glViewport(256, 0, 256, 256);
     drawTexturedQuad(fb_colortex);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -135,7 +144,6 @@ void loadTextures() {
         glGenTextures(1, &glTexture);
         
         glBindTexture(GL_TEXTURE_2D, glTexture);
-        cout << "\tBound texture " << glTexture << "\n";
 
         // Allocate storage for texture; upload pixel data
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, im.w, im.h, 0, GL_RGB, GL_UNSIGNED_BYTE, im.data.data());
@@ -145,7 +153,6 @@ void loadTextures() {
 
         // Store texture
         glTextures.insert(std::make_pair(name, glTexture));
-        cout << "\tStored texture with name: "<< name << "||" << glTextures[name] <<"\n";
     }
 }
 
@@ -160,7 +167,6 @@ void freeTextures() {
 }
 
 void loadFramebuffer() {
-  cout<< "loadFramebuffer()...\n";
   glGenTextures(1, &fb_depthtex);
   glGenTextures(1, &fb_colortex);
     
@@ -192,8 +198,7 @@ void loadFramebuffer() {
     printf("Error, incomplete framebuffer\n");
     exit(-1);
   }
-  glBindFramebuffer(GL_FRAMEBUFFER, 0); // reset to default FB (0)
-  cout<<"...done\n";
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void freeFramebuffer() {
@@ -203,11 +208,9 @@ void freeFramebuffer() {
 }
 
 Matrix4f getLightView() {
-  //float d = 100.0f;
   Vector3f center(0,0,0);
-  //Vector3f up(1, 1, ( - light_dir.x() - light_dir.y()) / light_dir.z() );
   Vector3f up(light_dir.z(), light_dir.z(), -light_dir.x() - light_dir.y());
-    up.normalize();
+  up.normalize();
   Vector3f eye( light_dir * 50.0f);
 
   return Matrix4f::lookAt( eye, center, up);

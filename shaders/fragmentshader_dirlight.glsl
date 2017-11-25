@@ -13,6 +13,8 @@ uniform vec3 ambientColor;
 uniform float shininess;
 uniform float alpha;
 uniform sampler2D diffuseTex;
+uniform sampler2D shadowTex;
+uniform mat4 light_VP;
 
 uniform vec3 lightPos;
 uniform vec3 lightDiff;
@@ -45,7 +47,25 @@ vec4 blinn_phong(vec3 kd) {
 }
 
 void main () {
-	// TODO implement shadow mapping here
     vec3 kd = texture(diffuseTex, var_Color.xy).xyz;
-    out_Color = vec4(ambientColor + blinn_phong(kd).xyz , 1);
+    
+    vec4 pos_world = vec4(var_Position, 1);
+    //pos_world /= pos_world.w;
+
+    vec4 positionProjected = light_VP * (vec4(lightPos, 1) + -pos_world); //* vec4(lightPos, 0);
+    positionProjected = (positionProjected * 0.5) + vec4( .5, .5, .5, 0);
+    
+    
+    float depth1 = positionProjected.z;
+    vec3 kp = texture(shadowTex, positionProjected.xy).xyz;
+    float newDepth = kp.z;
+
+    if( (newDepth + 0.001) < depth1) {
+        // shadow
+        out_Color = vec4(ambientColor, 1) + blinn_phong(kd) - vec4(kp.x, kp.x, kp.x, 1);
+    }
+    else {
+        // illuminated
+        out_Color = vec4(ambientColor + blinn_phong(kd).xyz , 1);
+    }
 }
