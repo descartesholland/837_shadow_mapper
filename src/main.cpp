@@ -121,8 +121,8 @@ void draw() {
     // 3. DRAW DEPTH TEXTURE AS QUAD
         glViewport(0, 0, 256, 256); // lower left corner
         drawTexturedQuad(fb_depthtex); //helper in main.h is useful here.
-	
-	glViewport(256, 0, 512, 256);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0); // reset to default FB (0)
+	glViewport(256, 0, 256, 256);
         drawTexturedQuad(fb_colortex);
 }
 
@@ -207,14 +207,14 @@ Matrix4f getLightView() {
   Vector3f center(0,0,0);
   Vector3f up(1, 1, ( - light_dir.x() - light_dir.y()) / light_dir.z() );
   //Vector3f up(light_dir.z(), light_dir.z(), -light_dir.x() - light_dir.y());
-  //up.normalize();
-  Vector3f eye(  light_dir * 100.0f);
+  up.normalize();
+  Vector3f eye( light_dir * 50.0f);
 
   return Matrix4f::lookAt( eye, center, up);
 }
 
 Matrix4f getLightProjection() {
-  return Matrix4f::orthographicProjection(256, 256, 1, 200, false);
+  return Matrix4f::orthographicProjection(64, 64, 8, 100, false);
 }
 
 // Main routine.
