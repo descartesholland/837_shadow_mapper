@@ -101,7 +101,6 @@ void draw() {
     
     drawScene(program_light, camera.GetViewMatrix(), camera.GetPerspective());
         
-    //cout<<"clearing FB...\n";
     glBindFramebuffer(GL_FRAMEBUFFER, 0); // reset to default FB (0)
     
     // 2. DEPTH PASS
@@ -113,17 +112,18 @@ void draw() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
     glUseProgram(program_color);
-    //updateLightUniforms(program_color, light_dir, Vector3f(1.2f, 1.2f, 1.2f));
+
     drawScene(program_color, getLightView(), getLightProjection());
 
-        glBindFramebuffer(GL_FRAMEBUFFER, 0); // reset to default FB (0)
+    glBindFramebuffer(GL_FRAMEBUFFER, 0); // reset to default FB (0)
     
     // 3. DRAW DEPTH TEXTURE AS QUAD
-        glViewport(0, 0, 256, 256); // lower left corner
-        drawTexturedQuad(fb_depthtex); //helper in main.h is useful here.
-	glBindFramebuffer(GL_FRAMEBUFFER, 0); // reset to default FB (0)
-	glViewport(256, 0, 256, 256);
-        drawTexturedQuad(fb_colortex);
+    glViewport(0, 0, 256, 256);
+    drawTexturedQuad(fb_depthtex); //helper in main.h is useful here.
+    glBindFramebuffer(GL_FRAMEBUFFER, 0); // reset to default FB (0)
+    glViewport(256, 0, 256, 256);
+    drawTexturedQuad(fb_colortex);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void loadTextures() {
@@ -205,9 +205,9 @@ void freeFramebuffer() {
 Matrix4f getLightView() {
   //float d = 100.0f;
   Vector3f center(0,0,0);
-  Vector3f up(1, 1, ( - light_dir.x() - light_dir.y()) / light_dir.z() );
-  //Vector3f up(light_dir.z(), light_dir.z(), -light_dir.x() - light_dir.y());
-  up.normalize();
+  //Vector3f up(1, 1, ( - light_dir.x() - light_dir.y()) / light_dir.z() );
+  Vector3f up(light_dir.z(), light_dir.z(), -light_dir.x() - light_dir.y());
+    up.normalize();
   Vector3f eye( light_dir * 50.0f);
 
   return Matrix4f::lookAt( eye, center, up);
